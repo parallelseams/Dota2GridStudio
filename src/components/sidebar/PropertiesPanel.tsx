@@ -988,7 +988,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         <span className="text-[#EF4444]">✕ unsupported ({categoryAnalysis.unsupportedSymbols.length})</span>
                       </div>
                       {categoryAnalysis.hasWarning && <p className="text-[10px] text-[#FBBF24] leading-snug pt-1">⚠ Этот символ может не отображаться в Dota 2.</p>}
-                      <button type="button" onClick={handleCleanUnsupportedDotaSymbols} disabled={categoryAnalysis.unsupportedSymbols.length === 0} className="w-full mt-1 py-1 text-[10px] rounded border border-[#7F1D1D] text-[#FCA5A5] hover:bg-[#2E1215] disabled:opacity-40 disabled:cursor-not-allowed">Clean unsupported symbols</button>
+                      <button type="button" onClick={handleCleanUnsupportedDotaSymbols} disabled={categoryAnalysis.unsupportedSymbols.length === 0} className="w-full mt-1 py-1 text-[10px] rounded border border-[#7F1D1D] text-[#FCA5A5] hover:bg-[#2E1215] disabled:opacity-40 disabled:cursor-not-allowed">Clean unsupported/unknown symbols (unknown are kept)</button>
                     </div>
                   </div>
 
