@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ProjectState, CanvasItem, GridSlot, GridGroup } from '../../types/dota';
 import {
   DOTA_HEROES,
@@ -11,6 +11,13 @@ import {
   ATTR_COLORS
 } from '../../data/dotaHeroes';
 import { createDefaultMainGrid, createDefaultBanGrid, createCustomHeroBox } from '../../utils/gridUtils';
+import {
+  DOTA_SYMBOLS,
+  DOTA_SYMBOL_CATEGORY_META,
+  DotaSymbolCategory,
+  analyzeDotaText,
+  cleanKnownUnsupportedSymbols
+} from '../../data/dotaSymbols';
 import {
   Sliders,
   Grid,
@@ -38,6 +45,27 @@ import {
   ArrowRight
 } from 'lucide-react';
 
+const DOTA_FAVORITES_STORAGE_KEY = 'dota-grid-studio:dota-symbol-favorites';
+const DOTA_RECENTS_STORAGE_KEY = 'dota-grid-studio:dota-symbol-recents';
+
+function loadStoredDotaSymbols(key: string): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(key) || '[]');
+    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string').slice(0, 12) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistDotaSymbols(key: string, values: string[]) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(values));
+  } catch {
+    // localStorage can be unavailable in private browsing; the picker still works for this session.
+  }
+}
+
 interface PropertiesPanelProps {
   project: ProjectState;
   onUpdateProject: (updater: (prev: ProjectState) => ProjectState) => void;
@@ -55,6 +83,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'properties' | 'grid' | 'symbols'>('symbols');
   const [selectedSymbolCategory, setSelectedSymbolCategory] = useState<string>('all');
+  const [selectedDotaSymbolCategory, setSelectedDotaSymbolCategory] = useState<DotaSymbolCategory | 'all'>('all');
+  const [dotaSafeOnly, setDotaSafeOnly] = useState(false);
+  const [favoriteDotaSymbols, setFavoriteDotaSymbols] = useState<string[]>(() => loadStoredDotaSymbols(DOTA_FAVORITES_STORAGE_KEY));
+  const [recentDotaSymbols, setRecentDotaSymbols] = useState<string[]>(() => loadStoredDotaSymbols(DOTA_RECENTS_STORAGE_KEY));
+  const categoryNameInputRef = useRef<HTMLInputElement>(null);
 
   // Custom text generator state
   const [customBannerText, setCustomBannerText] = useState('S-TIER HEROES');
@@ -79,6 +112,17 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const [gapX, setGapX] = useState(mainGrid?.gapX || 4);
   const [gapY, setGapY] = useState(mainGrid?.gapY || 4);
   const [banCount, setBanCount] = useState(banGrid?.slots.length || 10);
+
+  const categoryNameValue = selectedItem?.dotaCategoryName || selectedItem?.text || selectedItem?.name || '';
+  const categoryAnalysis = analyzeDotaText(categoryNameValue);
+  const visibleDotaSymbols = DOTA_SYMBOLS.filter((entry) =>
+    (selectedDotaSymbolCategory === 'all' || entry.category === selectedDotaSymbolCategory) &&
+    (!dotaSafeOnly || entry.compatibility === 'verified')
+  );
+  const favoriteDotaSymbolEntries = DOTA_SYMBOLS.filter((entry) => favoriteDotaSymbols.includes(entry.symbol));
+  const recentDotaSymbolEntries = recentDotaSymbols
+    .map((symbol) => DOTA_SYMBOLS.find((entry) => entry.symbol === symbol))
+    .filter((entry): entry is typeof DOTA_SYMBOLS[number] => !!entry);
 
   const handleRegenerateMainGrid = () => {
     const newMain = createDefaultMainGrid(
@@ -111,6 +155,44 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         grids: [...filtered, newBan]
       };
     });
+  };
+
+  const rememberDotaSymbol = (symbol: string) => {
+    const nextRecents = [symbol, ...recentDotaSymbols.filter((value) => value !== symbol)].slice(0, 12);
+    setRecentDotaSymbols(nextRecents);
+    persistDotaSymbols(DOTA_RECENTS_STORAGE_KEY, nextRecents);
+  };
+
+  const toggleDotaFavorite = (symbol: string) => {
+    const nextFavorites = favoriteDotaSymbols.includes(symbol)
+      ? favoriteDotaSymbols.filter((value) => value !== symbol)
+      : [symbol, ...favoriteDotaSymbols].slice(0, 24);
+    setFavoriteDotaSymbols(nextFavorites);
+    persistDotaSymbols(DOTA_FAVORITES_STORAGE_KEY, nextFavorites);
+  };
+
+  const handleInsertDotaSymbol = (symbol: string) => {
+    if (!selectedItem) return;
+    const input = categoryNameInputRef.current;
+    const start = input?.selectionStart ?? categoryNameValue.length;
+    const end = input?.selectionEnd ?? categoryNameValue.length;
+    const nextValue = categoryNameValue.slice(0, start) + symbol + categoryNameValue.slice(end);
+    handleUpdateSelectedItem({ dotaCategoryName: nextValue });
+    rememberDotaSymbol(symbol);
+
+    window.requestAnimationFrame(() => {
+      input?.focus();
+      const nextCursorPosition = start + symbol.length;
+      input?.setSelectionRange(nextCursorPosition, nextCursorPosition);
+    });
+  };
+
+  const handleCleanUnsupportedDotaSymbols = () => {
+    if (!selectedItem) return;
+    const cleanedValue = cleanKnownUnsupportedSymbols(categoryNameValue);
+    if (cleanedValue !== categoryNameValue) {
+      handleUpdateSelectedItem({ dotaCategoryName: cleanedValue });
+    }
   };
 
   const handleAddSymbol = (symbolChar: string, name: string) => {
@@ -835,12 +917,79 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   <div>
                     <label className="text-[10px] text-[#94A3B8] block mb-1">Dota Category Title</label>
                     <input
+                      ref={categoryNameInputRef}
                       type="text"
-                      value={selectedItem.dotaCategoryName || selectedItem.text || selectedItem.name || ''}
+                      value={categoryNameValue}
                       onChange={(e) => handleUpdateSelectedItem({ dotaCategoryName: e.target.value })}
                       placeholder="Category name in Dota 2"
                       className="w-full bg-[#121824] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
                     />
+                  </div>
+
+                  <div className="bg-[#0B0E15] border border-[#38BDF8]/30 rounded p-2.5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#38BDF8]">Dota Symbols</span>
+                      <label className="flex items-center gap-1 text-[10px] text-[#94A3B8] cursor-pointer">
+                        <input type="checkbox" checked={dotaSafeOnly} onChange={(e) => setDotaSafeOnly(e.target.checked)} className="accent-[#38BDF8] rounded" />
+                        Dota Safe
+                      </label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1">
+                      <select
+                        value={selectedDotaSymbolCategory}
+                        onChange={(e) => setSelectedDotaSymbolCategory(e.target.value as DotaSymbolCategory | 'all')}
+                        className="bg-[#121824] border border-[#202B3D] text-[10px] text-white px-1.5 py-1 rounded outline-none"
+                      >
+                        <option value="all">All categories</option>
+                        {Object.entries(DOTA_SYMBOL_CATEGORY_META).map(([key, meta]) => (
+                          <option key={key} value={key}>{meta.label}</option>
+                        ))}
+                      </select>
+                      <span className="text-[10px] text-[#64748B] flex items-center justify-end px-1">{visibleDotaSymbols.length} symbols</span>
+                    </div>
+                    {favoriteDotaSymbolEntries.length > 0 && (
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wide text-[#F59E0B]">Favorites</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {favoriteDotaSymbolEntries.map((entry) => (
+                            <div key={"favorite-" + entry.symbol} className="flex items-stretch">
+                              <button type="button" onClick={() => handleInsertDotaSymbol(entry.symbol)} title={entry.name} className="w-7 h-7 bg-[#121824] hover:bg-[#1E293B] border border-[#F59E0B]/40 rounded-l text-base text-white hover:text-[#F59E0B]">{entry.symbol}</button>
+                              <button type="button" onClick={() => toggleDotaFavorite(entry.symbol)} title="Remove from favorites" className="px-1 bg-[#121824] border-y border-r border-[#F59E0B]/40 rounded-r text-[10px] text-[#F59E0B]">★</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {recentDotaSymbolEntries.length > 0 && (
+                      <div>
+                        <span className="text-[9px] uppercase tracking-wide text-[#94A3B8]">Recently used</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {recentDotaSymbolEntries.map((entry) => (
+                            <button key={"recent-" + entry.symbol} type="button" onClick={() => handleInsertDotaSymbol(entry.symbol)} title={entry.name} className="w-7 h-7 bg-[#121824] hover:bg-[#1E293B] border border-[#202B3D] rounded text-base text-white hover:text-[#38BDF8]">{entry.symbol}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-6 gap-1 max-h-36 overflow-y-auto custom-scrollbar p-1 bg-[#121824] rounded border border-[#202B3D]">
+                      {visibleDotaSymbols.map((entry) => (
+                        <div key={entry.category + "-" + entry.symbol} className="flex items-stretch min-w-0">
+                          <button type="button" onClick={() => handleInsertDotaSymbol(entry.symbol)} title={entry.name + " — " + entry.compatibility} className="flex-1 min-w-0 h-8 bg-[#0E121A] hover:bg-[#1E293B] border border-[#202B3D] rounded-l text-base text-white">{entry.symbol}</button>
+                          <button type="button" onClick={() => toggleDotaFavorite(entry.symbol)} title={favoriteDotaSymbols.includes(entry.symbol) ? "Remove from favorites" : "Add to favorites"} className="px-0.5 bg-[#0E121A] border-y border-r border-[#202B3D] rounded-r text-[9px] text-[#64748B] hover:text-[#F59E0B]">{favoriteDotaSymbols.includes(entry.symbol) ? '★' : '☆'}</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-[#121824] border border-[#202B3D] rounded p-2 space-y-1">
+                      <span className="text-[9px] uppercase tracking-wide text-[#94A3B8]">Editor:</span>
+                      <div className="font-mono text-xs text-white break-all">{categoryNameValue || '─── ｡.:*♡*:.｡ ───'}</div>
+                      <span className="text-[9px] uppercase tracking-wide text-[#94A3B8] block pt-1">Dota compatibility:</span>
+                      <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[9px]">
+                        <span className="text-[#22C55E]">✓ verified ({categoryAnalysis.verifiedSymbols.length})</span>
+                        <span className="text-[#FBBF24]">⚠ unknown ({categoryAnalysis.unknownSymbols.length})</span>
+                        <span className="text-[#EF4444]">✕ unsupported ({categoryAnalysis.unsupportedSymbols.length})</span>
+                      </div>
+                      {categoryAnalysis.hasWarning && <p className="text-[10px] text-[#FBBF24] leading-snug pt-1">⚠ Этот символ может не отображаться в Dota 2.</p>}
+                      <button type="button" onClick={handleCleanUnsupportedDotaSymbols} disabled={categoryAnalysis.unsupportedSymbols.length === 0} className="w-full mt-1 py-1 text-[10px] rounded border border-[#7F1D1D] text-[#FCA5A5] hover:bg-[#2E1215] disabled:opacity-40 disabled:cursor-not-allowed">Clean unsupported symbols</button>
+                    </div>
                   </div>
 
                   {/* If Rectangle: Convert to Hero Grid Slots option! */}
