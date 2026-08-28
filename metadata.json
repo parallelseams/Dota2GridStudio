@@ -1,0 +1,6 @@
+{
+  "name": "Dota Grid Studio",
+  "description": "Professional desktop-grade Dota 2 custom hero grid layout designer, canvas overlay editor, and hero_grid_config.json generator.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

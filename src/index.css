@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #0B0E14;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #1E293B;
+    border-radius: 3px;
+    border: 1px solid #0B0E14;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #E5A93C;
+  }
+
+  .dota-glass {
+    background: rgba(16, 22, 34, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .dota-card {
+    background: #121824;
+    border: 1px solid #202B3D;
+    transition: all 0.15s ease-in-out;
+  }
+
+  .dota-card:hover {
+    border-color: #E5A93C;
+    box-shadow: 0 0 12px rgba(229, 169, 60, 0.25);
+  }
+}
+
+::selection {
+  background-color: rgba(229, 169, 60, 0.35);
+  color: #FFFFFF;
+}
+
