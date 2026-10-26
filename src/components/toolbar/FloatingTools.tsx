@@ -1,22 +1,6 @@
 import React from 'react';
 import { ToolType, Transform } from '../../types/dota';
-import {
-  MousePointer,
-  Hand,
-  Type,
-  Square,
-  Circle,
-  ArrowUpRight,
-  PenTool,
-  Smile,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Magnet,
-  Ruler,
-  Grid,
-  RotateCcw
-} from 'lucide-react';
+import { MousePointer, Hand, Type, ZoomIn, ZoomOut, Maximize2, Magnet, Ruler, Grid } from 'lucide-react';
 
 interface FloatingToolsProps {
   currentTool: ToolType;
@@ -49,13 +33,8 @@ export const FloatingTools: React.FC<FloatingToolsProps> = ({
 }) => {
   const tools: { id: ToolType; label: string; icon: React.ReactNode; shortcut: string }[] = [
     { id: 'select', label: 'Выбор (V)', icon: <MousePointer className="w-4 h-4" />, shortcut: 'V' },
-    { id: 'pan', label: 'Рука (H)', icon: <Hand className="w-4 h-4" />, shortcut: 'H' },
-    { id: 'rect', label: 'Квадрат / Рамка Доты', icon: <Square className="w-4 h-4" />, shortcut: 'R' },
-    { id: 'line', label: 'Палочка / Линия', icon: <ArrowUpRight className="w-4 h-4" />, shortcut: 'L' },
-    { id: 'text', label: 'Текст / Плашка', icon: <Type className="w-4 h-4" />, shortcut: 'T' },
-    { id: 'icon', label: 'Символы & Звёзды', icon: <Smile className="w-4 h-4" />, shortcut: 'S' },
-    { id: 'circle', label: 'Круг', icon: <Circle className="w-4 h-4" />, shortcut: 'O' },
-    { id: 'brush', label: 'Карандаш', icon: <PenTool className="w-4 h-4" />, shortcut: 'P' }
+    { id: 'pan', label: 'Перемещение (H)', icon: <Hand className="w-4 h-4" />, shortcut: 'H' },
+    { id: 'text', label: 'Текст категории (T)', icon: <Type className="w-4 h-4" />, shortcut: 'T' },
   ];
 
   const zoomPercent = Math.round(transform.zoom * 100);
@@ -87,7 +66,7 @@ export const FloatingTools: React.FC<FloatingToolsProps> = ({
               title={`${t.label} (${t.shortcut})`}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-semibold transition-all ${
                 isActive
-                  ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-black shadow-md shadow-amber-950/40'
+                  ? 'bg-gradient-to-r from-[#66C0F4] to-[#1A9FFF] text-black shadow-md shadow-amber-950/40'
                   : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'
               }`}
             >
@@ -170,7 +149,7 @@ export const FloatingTools: React.FC<FloatingToolsProps> = ({
         <button
           onClick={onFitToScreen}
           title="Fit Canvas to Screen (F)"
-          className="p-1.5 hover:text-[#F59E0B] hover:bg-[#1E293B] rounded transition-colors"
+          className="p-1.5 hover:text-[#66C0F4] hover:bg-[#1E293B] rounded transition-colors"
         >
           <Maximize2 className="w-3.5 h-3.5" />
         </button>

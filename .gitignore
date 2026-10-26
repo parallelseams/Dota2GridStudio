@@ -6,3 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+.pnpm-store/
+pnpm-workspace.yaml
+release/
+.electron-cache/
+.electron-tmp/
+
+work-original-*

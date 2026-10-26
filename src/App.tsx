@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Minus, Square, Copy, X } from 'lucide-react';
 import { ProjectState, Transform, ToolType, DotaHero, CanvasItem } from './types/dota';
 import { createDefaultProject } from './utils/gridUtils';
 import { generateStandaloneHtml } from './utils/standaloneHtmlGenerator';
@@ -53,6 +54,8 @@ export default function App() {
   const [isExportDotaOpen, setIsExportDotaOpen] = useState(false);
   const [isExportPngOpen, setIsExportPngOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isWindowMaximized, setIsWindowMaximized] = useState(false);
+  useEffect(() => window.dotaDesktop?.onWindowState(setIsWindowMaximized), []);
 
   // Auto-save to LocalStorage
   useEffect(() => {
@@ -68,7 +71,7 @@ export default function App() {
   useEffect(() => {
     if (!hasCenteredRef.current) {
       const width = window.innerWidth;
-      const height = window.innerHeight - 52; // Minus navbar
+      const height = window.innerHeight - 84; // Minus navbar
       const canvasW = project.canvasWidth || 1920;
       const canvasH = project.canvasHeight || 1080;
 
@@ -138,15 +141,8 @@ export default function App() {
         setCurrentTool('pan');
       } else if (e.key.toLowerCase() === 't') {
         setCurrentTool('text');
-      } else if (e.key.toLowerCase() === 'r') {
-        setCurrentTool('rect');
-      } else if (e.key.toLowerCase() === 'o') {
-        setCurrentTool('circle');
-      } else if (e.key.toLowerCase() === 'l') {
-        setCurrentTool('line');
-      } else if (e.key.toLowerCase() === 'p') {
-        setCurrentTool('brush');
       }
+
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -183,7 +179,7 @@ export default function App() {
   // Fit to screen helper
   const handleFitToScreen = () => {
     const width = window.innerWidth;
-    const height = window.innerHeight - 52;
+    const height = window.innerHeight - 84;
     const canvasW = project.canvasWidth || 1920;
     const canvasH = project.canvasHeight || 1080;
 
@@ -218,7 +214,15 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#0B0B0B] text-[#E0E0E0] overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="flex flex-col h-screen w-screen bg-[#1B2838] text-[#C7D5E0] overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
+      <div className="desktop-titlebar">
+        <div className="desktop-titlebar-drag"><span className="desktop-titlebar-icon">D</span><span>Dota Grid Studio</span></div>
+        {window.dotaDesktop && <div className="desktop-window-controls">
+          <button title="Свернуть" aria-label="Свернуть" onClick={() => window.dotaDesktop?.controlWindow('minimize')}><Minus size={15} /></button>
+          <button title={isWindowMaximized ? 'Восстановить' : 'Развернуть'} aria-label={isWindowMaximized ? 'Восстановить' : 'Развернуть'} onClick={() => window.dotaDesktop?.controlWindow('toggle-maximize')}>{isWindowMaximized ? <Copy size={12} /> : <Square size={12} />}</button>
+          <button className="desktop-window-close" title="Закрыть" aria-label="Закрыть" onClick={() => window.dotaDesktop?.controlWindow('close')}><X size={16} /></button>
+        </div>}
+      </div>
       {/* Top Navbar */}
       <TopNavbar
         project={project}
@@ -234,7 +238,7 @@ export default function App() {
       />
 
       {/* Main Workspace Area */}
-      <div className="flex-1 flex relative overflow-hidden bg-[#0B0B0B]">
+      <div className="flex-1 flex relative overflow-hidden bg-[#1B2838]">
         {/* Left Sidebar: Hero Roster */}
         <HeroSidebar
           project={project}
@@ -245,7 +249,7 @@ export default function App() {
         />
 
         {/* Central Canvas Viewport */}
-        <main className="flex-1 relative h-full overflow-hidden bg-[#080808]">
+        <main className="flex-1 relative h-full overflow-hidden bg-[#15202B]">
           <FloatingTools
             currentTool={currentTool}
             onSelectTool={setCurrentTool}
@@ -301,14 +305,14 @@ export default function App() {
         </main>
 
         {/* Right Sidebar: Properties & Layers Panel */}
-        <aside className="w-80 bg-[#111111] border-l border-[#242424] flex flex-col h-full z-20 select-none">
-          <div className="p-2 border-b border-[#242424] flex gap-1 bg-[#0E0E0E]">
+        <aside className="w-80 bg-[#171A21] border-l border-[#101820] flex flex-col h-full z-20 select-none">
+          <div className="p-2 border-b border-[#242424] flex gap-1 bg-[#1B2838]">
             <button
               onClick={() => setRightPanelTab('properties')}
               className={`flex-1 py-1.5 text-xs font-semibold rounded transition-all ${
                 rightPanelTab === 'properties'
-                  ? 'bg-[#1C1C1C] text-[#A4E044] border border-[#333333] shadow-sm'
-                  : 'text-[#888888] hover:text-[#E0E0E0] hover:bg-[#161616]'
+                  ? 'bg-[#26384A] text-[#66C0F4] border border-[#35495E] shadow-sm'
+                  : 'text-[#8F98A0] hover:text-[#C7D5E0] hover:bg-[#26384A]'
               }`}
             >
               Properties & Grid
@@ -317,8 +321,8 @@ export default function App() {
               onClick={() => setRightPanelTab('layers')}
               className={`flex-1 py-1.5 text-xs font-semibold rounded transition-all ${
                 rightPanelTab === 'layers'
-                  ? 'bg-[#1C1C1C] text-[#A4E044] border border-[#333333] shadow-sm'
-                  : 'text-[#888888] hover:text-[#E0E0E0] hover:bg-[#161616]'
+                  ? 'bg-[#26384A] text-[#66C0F4] border border-[#35495E] shadow-sm'
+                  : 'text-[#8F98A0] hover:text-[#C7D5E0] hover:bg-[#26384A]'
               }`}
             >
               Layers ({project.items.length + project.grids.length})

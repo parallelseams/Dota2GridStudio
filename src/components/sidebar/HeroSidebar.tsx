@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { DotaHero, ProjectState, HeroAttribute } from '../../types/dota';
 import { DOTA_HEROES, ATTR_COLORS, getHeroImageUrl } from '../../data/dotaHeroes';
-import { autoFillGrid } from '../../utils/gridUtils';
+import { assignHeroToSlot, autoFillGrid } from '../../utils/gridUtils';
 import {
   Search,
   Filter,
@@ -80,13 +80,8 @@ export const HeroSidebar: React.FC<HeroSidebarProps> = ({
   const handleAutoFill = (type: 'alphabetical' | 'attribute' | 'clear' | 'roles') => {
     onUpdateProject((prev) => {
       const nextGrids = prev.grids.map((grid, idx) => {
-        if (idx === 0) {
-          // Main Grid
-          return {
-            ...grid,
-            slots: autoFillGrid(grid, type)
-          };
-        }
+        if (type === 'clear') return { ...grid, slots: autoFillGrid(grid, 'clear') };
+        if (idx === 0) return { ...grid, slots: autoFillGrid(grid, type) };
         return grid;
       });
       return { ...prev, grids: nextGrids };
@@ -95,21 +90,23 @@ export const HeroSidebar: React.FC<HeroSidebarProps> = ({
   };
 
   const handleFillBans = () => {
-    // Fill ban slots with popular meta disruptors (e.g. Tinker, Arc Warden, Meepo, Broodmother, Techies, Pudge, etc.)
-    const banMetaHeroIds = [34, 113, 82, 61, 105, 14, 10, 74, 1, 88];
-    onUpdateProject((prev) => {
-      const nextGrids = prev.grids.map((grid) => {
-        if (grid.isBanGrid) {
-          const slots = grid.slots.map((s, i) => ({
-            ...s,
-            heroId: i < banMetaHeroIds.length ? banMetaHeroIds[i] : null
-          }));
-          return { ...grid, slots };
-        }
-        return grid;
-      });
-      return { ...prev, grids: nextGrids };
-    });
+    // Fill the ban row with a small example set; it is not based on current match data.
+    const sampleBanIds = ['pudge', 'broodmother', 'meepo', 'antimage', 'tinker', 'techies', 'arc_warden', 'huskar', 'invoker', 'phantom_assassin']
+      .map((shortName) => DOTA_HEROES.find((hero) => hero.shortName === shortName)?.id)
+      .filter((id): id is number => id !== undefined);
+    onUpdateProject((prev) =>
+      prev.grids.filter((grid) => grid.isBanGrid).reduce((currentProject, grid) =>
+        grid.slots.reduce((current, slot, index) => {
+          const heroId = sampleBanIds[index] ?? null;
+          if (heroId !== null) return assignHeroToSlot(current, grid.id, slot.id, heroId);
+          return {
+            ...current,
+            grids: current.grids.map((candidate) => candidate.id === grid.id
+              ? { ...candidate, slots: candidate.slots.map((candidateSlot) => candidateSlot.id === slot.id ? { ...candidateSlot, heroId: null } : candidateSlot) }
+              : candidate)
+          };
+        }, currentProject), prev)
+    );
     setShowAutoFillMenu(false);
   };
 
@@ -119,7 +116,7 @@ export const HeroSidebar: React.FC<HeroSidebarProps> = ({
       <div className="p-3 border-b border-[#1E293B] flex items-center justify-between bg-[#0B0E15]">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-xs text-[#F1F5F9] tracking-wider font-['Cinzel']">HERO ROSTER</span>
-          <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-[#161F30] text-[#F59E0B] border border-[#2B3A52]">
+          <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-[#161F30] text-[#66C0F4] border border-[#2B3A52]">
             {filteredHeroes.length} / {DOTA_HEROES.length}
           </span>
         </div>
@@ -130,7 +127,7 @@ export const HeroSidebar: React.FC<HeroSidebarProps> = ({
             onClick={() => setShowAutoFillMenu(!showAutoFillMenu)}
             className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 bg-[#161F30] hover:bg-[#202B3D] text-[#E2E8F0] border border-[#2B3A52] rounded transition-colors"
           >
-            <Sparkles className="w-3 h-3 text-[#F59E0B]" />
+            <Sparkles className="w-3 h-3 text-[#66C0F4]" />
             <span>Auto-Fill</span>
             <ChevronDown className="w-3 h-3 text-[#64748B]" />
           </button>
@@ -163,7 +160,7 @@ export const HeroSidebar: React.FC<HeroSidebarProps> = ({
                 className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-red-950/40 flex items-center gap-2 border-t border-[#1E293B]"
               >
                 <span className="text-red-400 font-bold">🚫</span>
-                <span>Auto-Fill 10 Meta Bans</span>
+                <span>Fill Sample Bans</span>
               </button>
               <button
                 onClick={() => handleAutoFill('clear')}
@@ -186,7 +183,7 @@ export const HeroSidebar: React.FC<HeroSidebarProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search hero or role..."
-            className="w-full bg-[#121824] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-[#E2E8F0] pl-8 pr-7 py-1.5 rounded outline-none transition-colors"
+            className="w-full bg-[#121824] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-[#E2E8F0] pl-8 pr-7 py-1.5 rounded outline-none transition-colors"
           />
           {searchQuery && (
             <button
@@ -205,7 +202,7 @@ export const HeroSidebar: React.FC<HeroSidebarProps> = ({
           onClick={() => setSelectedAttr('all')}
           className={`flex-1 py-1 text-[11px] font-semibold rounded border transition-all ${
             selectedAttr === 'all'
-              ? 'bg-[#1E293B] text-[#F59E0B] border-[#F59E0B]/50 shadow-sm'
+              ? 'bg-[#1E293B] text-[#66C0F4] border-[#66C0F4]/50 shadow-sm'
               : 'bg-[#121824] text-[#94A3B8] border-[#202B3D] hover:text-[#E2E8F0]'
           }`}
         >
@@ -278,7 +275,7 @@ export const HeroSidebar: React.FC<HeroSidebarProps> = ({
                 prev === 'all' ? 'unassigned' : prev === 'unassigned' ? 'assigned' : 'all'
               )
             }
-            className="hover:text-[#F59E0B] underline decoration-[#334155]"
+            className="hover:text-[#66C0F4] underline decoration-[#334155]"
           >
             {statusFilter === 'all'
               ? 'All State'
@@ -312,7 +309,7 @@ export const HeroSidebar: React.FC<HeroSidebarProps> = ({
               className={`group relative aspect-[16/10] bg-[#121824] border rounded overflow-hidden cursor-grab active:cursor-grabbing hover:scale-105 hover:z-20 transition-all shadow-sm ${
                 isAssigned
                   ? 'border-[#334155] opacity-75'
-                  : 'border-[#202B3D] hover:border-[#F59E0B]'
+                  : 'border-[#202B3D] hover:border-[#66C0F4]'
               }`}
             >
               <img

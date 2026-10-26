@@ -226,6 +226,67 @@ export function createDefaultProject(): ProjectState {
   };
 }
 
+
+/** Assign a hero to a slot while keeping each hero in at most one grid slot. */
+export function assignHeroToSlot(
+  project: ProjectState,
+  gridId: string,
+  slotId: string,
+  heroId: number
+): ProjectState {
+  const targetGrid = project.grids.find((grid) => grid.id === gridId);
+  const targetSlot = targetGrid?.slots.find((slot) => slot.id === slotId);
+  if (!targetGrid || !targetSlot || targetGrid.locked || targetSlot.locked) return project;
+
+  const existingAssignments = project.grids.flatMap((grid) =>
+    grid.slots
+      .filter((slot) => slot.heroId === heroId && (grid.id !== gridId || slot.id !== slotId))
+      .map((slot) => ({ gridId: grid.id, slotId: slot.id, locked: grid.locked || slot.locked }))
+  );
+  const source = existingAssignments.find((assignment) => !assignment.locked);
+  if (existingAssignments.length > 0 && !source) return project;
+  const displacedHeroId = targetSlot.heroId;
+
+  if (!source && displacedHeroId === heroId) return project;
+
+  return {
+    ...project,
+    grids: project.grids.map((grid) => ({
+      ...grid,
+      slots: grid.slots.map((slot) => {
+        if (grid.id === gridId && slot.id === slotId) return { ...slot, heroId };
+        if (source && grid.id === source.gridId && slot.id === source.slotId) {
+          return { ...slot, heroId: displacedHeroId };
+        }
+        return slot;
+      })
+    }))
+  };
+}
+
+export function isValidProjectState(value: unknown): value is ProjectState {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<ProjectState>;
+  return (
+    typeof candidate.id === 'string' &&
+    typeof candidate.title === 'string' &&
+    Number.isFinite(candidate.canvasWidth) && (candidate.canvasWidth ?? 0) > 0 &&
+    Number.isFinite(candidate.canvasHeight) && (candidate.canvasHeight ?? 0) > 0 &&
+    Array.isArray(candidate.grids) && candidate.grids.every((grid) =>
+      !!grid && typeof grid.id === 'string' && Array.isArray(grid.slots) && grid.slots.every((slot) =>
+        !!slot && typeof slot.id === 'string' &&
+        Number.isFinite(slot.x) && Number.isFinite(slot.y) &&
+        Number.isFinite(slot.width) && Number.isFinite(slot.height) &&
+        (slot.heroId === null || Number.isFinite(slot.heroId))
+      )
+    ) &&
+    Array.isArray(candidate.items) && candidate.items.every((item) =>
+      !!item && typeof item.id === 'string' && typeof item.type === 'string' &&
+      Number.isFinite(item.x) && Number.isFinite(item.y) &&
+      Number.isFinite(item.width) && Number.isFinite(item.height)
+    )
+  );
+}
 // Find closest slot within snap radius
 export function findSnapSlot(
   grids: GridGroup[],
@@ -476,7 +537,7 @@ export function exportToDotaGridConfig(project: ProjectState): DotaHeroGridConfi
     // D. Lines / Sticks / Dividers
     if (item.type === 'line') {
       const repeatCount = Math.max(8, Math.round((item.width * scaleX) / 8));
-      const lineChars = item.text || '─'.repeat(repeatCount);
+      const lineChars = item.text || '͟ '.repeat(repeatCount);
       const cleanLine = sanitizeDotaCategoryName(lineChars);
       categories.push({
         category_name: cleanLine,

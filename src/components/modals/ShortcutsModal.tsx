@@ -8,6 +8,8 @@ interface ShortcutsModalProps {
 export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ onClose }) => {
   const shortcuts = [
     { key: 'V', desc: 'Инструмент выделения (Select & Move)' },
+    { key: 'S', desc: 'Добавить символ или звезду' },
+    { key: 'F', desc: 'Вписать весь холст в экран' },
     { key: 'Рамка мышью', desc: 'Выделение прямоугольной областью множества символов' },
     { key: 'Shift + Клик', desc: 'Добавить / убрать объект из множественного выделения' },
     { key: 'Перетаскивание', desc: 'Перенос всех выделенных символов и объектов вместе' },
@@ -19,7 +21,8 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ onClose }) => {
     { key: 'Стрелочки ↑ ↓ ← →', desc: 'Точный сдвиг группы объектов (Shift = 10px)' },
     { key: 'H / Пробел + Drag', desc: 'Панорамирование холста (Pan / Hand)' },
     { key: 'Колесико мыши', desc: 'Плавный зум холста (Zoom In / Out)' },
-    { key: 'T / R / O / L / P', desc: 'Инструменты: Текст / Прямоугольник / Круг / Линия / Кисть' },
+    { key: 'T', desc: 'Добавить текстовую категорию Dota' },
+    { key: 'V / H', desc: 'Выбор / Перемещение холста' },
     { key: 'Ctrl + Z / Ctrl + Y', desc: 'Отмена (Undo) / Повтор (Redo)' },
     { key: 'Delete / Backspace', desc: 'Удалить выбранные объекты или очистить слот' },
     { key: 'Drag Hero из списка', desc: 'Назначить героя в любой слот сетки' },
@@ -32,7 +35,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ onClose }) => {
         {/* Header */}
         <div className="px-5 py-4 border-b border-[#242424] flex items-center justify-between bg-[#0E0E0E]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded bg-[#1A1A1A] border border-[#333333] text-[#A4E044]">
+            <div className="p-2 rounded bg-[#1A1A1A] border border-[#333333] text-[#66C0F4]">
               <Keyboard className="w-5 h-5" />
             </div>
             <div>
@@ -58,7 +61,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ onClose }) => {
               className="flex items-center justify-between py-1.5 px-2.5 rounded bg-[#141414] border border-[#262626] text-xs"
             >
               <span className="text-[#C8C8C8]">{sc.desc}</span>
-              <kbd className="px-2 py-0.5 bg-[#0A0A0A] border border-[#2D2D2D] text-[#A4E044] font-mono text-[11px] rounded shadow-sm">
+              <kbd className="px-2 py-0.5 bg-[#0A0A0A] border border-[#2D2D2D] text-[#66C0F4] font-mono text-[11px] rounded shadow-sm">
                 {sc.key}
               </kbd>
             </div>
@@ -69,7 +72,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ onClose }) => {
         <div className="px-5 py-3.5 bg-[#0E0E0E] border-t border-[#242424] flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-[#A4E044] hover:bg-[#B7F055] text-[#0B0B0B] text-xs font-bold rounded shadow-sm transition-colors cursor-pointer"
+            className="px-4 py-1.5 bg-[#66C0F4] hover:bg-[#1A9FFF] text-[#0B0B0B] text-xs font-bold rounded shadow-sm transition-colors cursor-pointer"
           >
             Got It
           </button>

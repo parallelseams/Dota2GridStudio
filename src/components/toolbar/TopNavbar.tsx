@@ -158,14 +158,14 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded bg-gradient-to-br from-[#1E293B] to-[#0F172A] border border-[#334155] flex items-center justify-center shadow-inner relative group">
-            <span className="text-base text-[#F59E0B] font-bold group-hover:scale-110 transition-transform">⚔️</span>
+            <span className="text-base text-[#66C0F4] font-bold group-hover:scale-110 transition-transform">⚔️</span>
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="font-['Cinzel'] font-bold text-sm tracking-wider text-[#F1F5F9]">
                 DOTA GRID STUDIO
               </span>
-              <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-mono font-semibold uppercase px-2 py-0.5 rounded bg-[#161F30] text-[#F59E0B] border border-[#2B3A52]">
+              <span className="hidden lg:inline-flex items-center gap-1 text-[10px] font-mono font-semibold uppercase px-2 py-0.5 rounded bg-[#161F30] text-[#66C0F4] border border-[#2B3A52]">
                 {project.grids.length} Grids • {assignedHeroesCount} Heroes
               </span>
             </div>
@@ -212,7 +212,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               >
                 <span className="text-base">⚔️</span>
                 <div>
-                  <div className="font-semibold text-[#F1F5F9] group-hover:text-[#F59E0B]">Позиции 1-5 (Pro Roles)</div>
+                  <div className="font-semibold text-[#F1F5F9] group-hover:text-[#66C0F4]">Позиции 1-5 (Pro Roles)</div>
                   <div className="text-[10px] text-[#94A3B8] leading-tight">&lt;KERRY&gt; &lt;MID&gt; &lt;OFF&gt; &lt;SUPPORT&gt; с разделителями</div>
                 </div>
               </button>
@@ -265,7 +265,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               {/* Dota Plus Tier Badges */}
               <label className="flex items-center justify-between px-2 py-1.5 hover:bg-[#1E293B] rounded-lg cursor-pointer text-xs text-[#E2E8F0]">
                 <div className="flex items-center gap-2">
-                  <Award className="w-3.5 h-3.5 text-[#F59E0B]" />
+                  <Award className="w-3.5 h-3.5 text-[#66C0F4]" />
                   <span>Уровни Dota Plus (1-30)</span>
                 </div>
                 <input
@@ -277,7 +277,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                       showHeroTiers: e.target.checked
                     }))
                   }
-                  className="rounded border-[#2B3A52] text-[#F59E0B] focus:ring-0 accent-[#F59E0B]"
+                  className="rounded border-[#2B3A52] text-[#66C0F4] focus:ring-0 accent-[#66C0F4]"
                 />
               </label>
 
@@ -334,7 +334,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
               }))
             }
             placeholder="Layout Title..."
-            className="bg-[#121824] border border-[#202B3D] hover:border-[#3B82F6]/50 focus:border-[#F59E0B] text-xs text-[#E2E8F0] px-2.5 py-1 rounded outline-none w-44 transition-colors font-medium"
+            className="bg-[#121824] border border-[#202B3D] hover:border-[#3B82F6]/50 focus:border-[#66C0F4] text-xs text-[#E2E8F0] px-2.5 py-1 rounded outline-none w-44 transition-colors font-medium"
           />
         </div>
       </div>
@@ -377,7 +377,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
                 title={project.background.locked ? 'Unlock Background' : 'Lock Background'}
                 className={`p-1 rounded transition-colors ${
                   project.background.locked
-                    ? 'text-[#F59E0B] bg-[#F59E0B]/15'
+                    ? 'text-[#66C0F4] bg-[#66C0F4]/15'
                     : 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'
                 }`}
               >
@@ -451,16 +451,16 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         {/* Export PNG */}
         <button
           onClick={onOpenExportPng}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-[#E2E8F0] bg-[#161F30] hover:bg-[#1E293B] border border-[#2B3A52] hover:border-[#F59E0B] rounded shadow-sm transition-all"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-[#E2E8F0] bg-[#161F30] hover:bg-[#1E293B] border border-[#2B3A52] hover:border-[#66C0F4] rounded shadow-sm transition-all"
         >
-          <Camera className="w-3.5 h-3.5 text-[#F59E0B]" />
+          <Camera className="w-3.5 h-3.5 text-[#66C0F4]" />
           <span className="hidden sm:inline">PNG</span>
         </button>
 
         {/* Export Dota 2 hero_grid_config.json */}
         <button
           onClick={onOpenExportDota}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-black bg-gradient-to-r from-[#F59E0B] via-[#E5A93C] to-[#D97706] hover:from-[#FBBF24] hover:to-[#E5A93C] border border-[#F59E0B] rounded shadow-md shadow-amber-950/40 hover:shadow-amber-500/20 transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-black bg-gradient-to-r from-[#66C0F4] via-[#66C0F4] to-[#1A9FFF] hover:from-[#66C0F4] hover:to-[#66C0F4] border border-[#66C0F4] rounded shadow-md shadow-amber-950/40 hover:shadow-amber-500/20 transition-all cursor-pointer"
         >
           <FileCode className="w-3.5 h-3.5 text-black" />
           <span>Dota 2 JSON</span>

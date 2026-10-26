@@ -47,6 +47,9 @@ import {
 
 const DOTA_FAVORITES_STORAGE_KEY = 'dota-grid-studio:dota-symbol-favorites';
 const DOTA_RECENTS_STORAGE_KEY = 'dota-grid-studio:dota-symbol-recents';
+const DOTA_SAFE_PRESET_IDS = new Set(['pos_kerry_header','pos_main_header','pos_hardline_header','pos_mid_header','pos_support_header','anime_heart_banner','anime_japanese_quote','anime_carry_quote','stars_banner','badge_brackets']);
+const DOTA_TESTED_SYMBOLS = new Set(['★','☆','✪','✫','✯','■','□','▪','▫','▣','▤','▥','▦','▧','▨','▩','●','○','◉','◎','◌','◍','◐','◑','▲','△','▼','▽','◀','◁','▶','▷','◢','◣','◤','◥','◆','◇','◈','◊','♦','♢','♡','♥','←','↑','→','↓','↔','↕','↖','↗','↘','↙','⇒','⇔','±','×','÷','≠','≈','≤','≥','∞','√','∑','∏','∫','∂','∇','∴','∵','∝','∠','⊕','⊙','•','‧','·','…','‥','§','¶','†','‡','‰','※','♠','♣','♤','♧','☎','♫','♪','♬','☺','☻','☹','¬','͟','̲','̅','̶','̸','͞','͠','⁰','¹','²','³','⁴','⁵','⁶','⁷','⁸','⁹','⁺','⁻','α','β','γ','δ','ε','ζ','η','θ','λ','μ','π','σ','φ','ω','Α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Λ','Μ','Π','Σ','Φ','Ω','あ','ア','日','本','語','文','字','漢','字']);
+const visibleAsciiPresets = DOTA_ASCII_PRESETS.filter((preset) => DOTA_SAFE_PRESET_IDS.has(preset.id));
 
 function loadStoredDotaSymbols(key: string): string[] {
   if (typeof window === 'undefined') return [];
@@ -91,7 +94,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   // Custom text generator state
   const [customBannerText, setCustomBannerText] = useState('S-TIER HEROES');
-  const [bannerStyle, setBannerStyle] = useState<'stars' | 'box' | 'swords' | 'brackets' | 'double'>('stars');
+  const [bannerStyle, setBannerStyle] = useState<'stars' | 'brackets'>('stars');
 
   // Find active single selected item
   const selectedItem = selectedItemIds.length === 1 ? project.items.find((i) => i.id === selectedItemIds[0]) : null;
@@ -116,13 +119,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const categoryNameValue = selectedItem?.dotaCategoryName || selectedItem?.text || selectedItem?.name || '';
   const categoryAnalysis = analyzeDotaText(categoryNameValue);
   const visibleDotaSymbols = DOTA_SYMBOLS.filter((entry) =>
+    (DOTA_TESTED_SYMBOLS.has(entry.symbol) || entry.compatibility === 'verified') &&
     (selectedDotaSymbolCategory === 'all' || entry.category === selectedDotaSymbolCategory) &&
-    (!dotaSafeOnly || entry.compatibility === 'verified')
+    (!dotaSafeOnly || entry.compatibility === 'verified' || DOTA_TESTED_SYMBOLS.has(entry.symbol))
   );
-  const favoriteDotaSymbolEntries = DOTA_SYMBOLS.filter((entry) => favoriteDotaSymbols.includes(entry.symbol));
+  const favoriteDotaSymbolEntries = DOTA_SYMBOLS.filter((entry) => DOTA_TESTED_SYMBOLS.has(entry.symbol) && favoriteDotaSymbols.includes(entry.symbol));
   const recentDotaSymbolEntries = recentDotaSymbols
     .map((symbol) => DOTA_SYMBOLS.find((entry) => entry.symbol === symbol))
-    .filter((entry): entry is typeof DOTA_SYMBOLS[number] => !!entry);
+    .filter((entry): entry is typeof DOTA_SYMBOLS[number] => !!entry && DOTA_TESTED_SYMBOLS.has(entry.symbol));
 
   const handleRegenerateMainGrid = () => {
     const newMain = createDefaultMainGrid(
@@ -211,7 +215,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       zIndex: project.items.length + 10,
       iconChar: symbolChar,
       fontSize: 32,
-      textColor: '#F59E0B',
+      textColor: '#66C0F4',
       textGlow: 'rgba(245, 158, 11, 0.4)',
       textGlowBlur: 10,
       exportToDota: true,
@@ -255,11 +259,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     }));
   };
 
-  const handleAddStraightLine = (style: 'double' | 'single' | 'heavy') => {
-    const chars = style === 'double' ? '═══════════════════════════════' : style === 'heavy' ? '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' : '───────────────────────────────';
+  const handleAddStraightLine = (_style: 'single') => {
+    const chars = '͟ '.repeat(28);
     const newItem: CanvasItem = {
       id: 'line_' + Date.now(),
-      name: `Stick (${style})`,
+      name: 'Проверенная полоска',
       type: 'line',
       x: Math.round(project.canvasWidth / 2 - 300),
       y: Math.round(project.canvasHeight / 2),
@@ -275,10 +279,10 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       fontFamily: 'monospace',
       fontWeight: 'bold',
       textAlign: 'center',
-      textColor: '#F59E0B',
+      textColor: '#66C0F4',
       textGlow: 'rgba(245, 158, 11, 0.4)',
       textGlowBlur: 8,
-      stroke: '#F59E0B',
+      stroke: '#66C0F4',
       strokeWidth: 2,
       exportToDota: true,
       dotaCategoryName: chars
@@ -330,7 +334,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
       fontWeight: 'bold',
       textAlign: 'center',
-      textColor: '#F59E0B',
+      textColor: '#66C0F4',
       textGlow: 'rgba(245, 158, 11, 0.35)',
       textGlowBlur: 8,
       exportToDota: true,
@@ -340,19 +344,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   };
 
   const handleCreateCustomBanner = () => {
-    let formattedText = customBannerText.trim();
-    if (bannerStyle === 'stars') {
-      formattedText = `★ ★ ${formattedText.toUpperCase()} ★ ★`;
-    } else if (bannerStyle === 'box') {
-      formattedText = `┌─── ${formattedText.toUpperCase()} ───┐`;
-    } else if (bannerStyle === 'double') {
-      formattedText = `╔═══ ${formattedText.toUpperCase()} ═══╗`;
-    } else if (bannerStyle === 'swords') {
-      formattedText = `⚔ ── ${formattedText.toUpperCase()} ── ⚔`;
-    } else if (bannerStyle === 'brackets') {
-      formattedText = `[ ★ ${formattedText.toUpperCase()} ★ ]`;
-    }
-
+    const baseText = customBannerText.trim().toUpperCase();
+    const formattedText = bannerStyle === 'stars' ? `★ ★ ${baseText} ★ ★` : `[ ★ ${baseText} ★ ]`;
     const newItem: CanvasItem = {
       id: 'banner_' + Date.now(),
       name: `Banner: ${customBannerText}`,
@@ -371,7 +364,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       fontFamily: 'Cinzel, Georgia, serif',
       fontWeight: 'bold',
       textAlign: 'center',
-      textColor: '#F59E0B',
+      textColor: '#66C0F4',
       textGlow: 'rgba(245, 158, 11, 0.5)',
       textGlowBlur: 12,
       exportToDota: true,
@@ -435,7 +428,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           onClick={() => setActiveTab('symbols')}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-t border-t border-x transition-colors flex items-center justify-center gap-1.5 ${
             activeTab === 'symbols'
-              ? 'bg-[#0E121A] text-[#F59E0B] border-[#2B3A52] border-b-transparent shadow-sm'
+              ? 'bg-[#0E121A] text-[#66C0F4] border-[#2B3A52] border-b-transparent shadow-sm'
               : 'bg-transparent text-[#64748B] border-transparent hover:text-[#E2E8F0]'
           }`}
         >
@@ -447,7 +440,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           onClick={() => setActiveTab('grid')}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-t border-t border-x transition-colors flex items-center justify-center gap-1.5 ${
             activeTab === 'grid'
-              ? 'bg-[#0E121A] text-[#F59E0B] border-[#2B3A52] border-b-transparent shadow-sm'
+              ? 'bg-[#0E121A] text-[#66C0F4] border-[#2B3A52] border-b-transparent shadow-sm'
               : 'bg-transparent text-[#64748B] border-transparent hover:text-[#E2E8F0]'
           }`}
         >
@@ -459,7 +452,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           onClick={() => setActiveTab('properties')}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-t border-t border-x transition-colors flex items-center justify-center gap-1.5 ${
             activeTab === 'properties'
-              ? 'bg-[#0E121A] text-[#F59E0B] border-[#2B3A52] border-b-transparent shadow-sm'
+              ? 'bg-[#0E121A] text-[#66C0F4] border-[#2B3A52] border-b-transparent shadow-sm'
               : 'bg-transparent text-[#64748B] border-transparent hover:text-[#E2E8F0]'
           }`}
         >
@@ -475,9 +468,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             {/* Custom Banner Generator for Dota 2 */}
             <div className="bg-[#121824] border border-[#202B3D] rounded-lg p-3 space-y-2.5 shadow-md">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#F59E0B] flex items-center gap-1.5 font-['Cinzel']">
+                <span className="text-xs font-bold text-[#66C0F4] flex items-center gap-1.5 font-['Cinzel']">
                   <FileCode className="w-3.5 h-3.5" />
-                  ПЛАШКА / РАМКА ДЛЯ ДОТЫ
+                  ЗАГОЛОВОК КАТЕГОРИИ DOTA
                 </span>
                 <span className="text-[9px] font-bold text-[#38BDF8] px-1.5 py-0.5 rounded bg-[#38BDF8]/10 border border-[#38BDF8]/30">
                   DOTA 2 JSON
@@ -491,69 +484,21 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   value={customBannerText}
                   onChange={(e) => setCustomBannerText(e.target.value)}
                   placeholder="Например: PRIORITY PICKS"
-                  className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                  className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-1 text-[10px]">
-                <button
-                  onClick={() => setBannerStyle('stars')}
-                  className={`p-1 rounded border text-center truncate ${
-                    bannerStyle === 'stars'
-                      ? 'bg-[#F59E0B]/20 border-[#F59E0B] text-[#F59E0B]'
-                      : 'bg-[#0E121A] border-[#202B3D] text-[#94A3B8]'
-                  }`}
-                >
-                  ★ Звёзды ★
-                </button>
-                <button
-                  onClick={() => setBannerStyle('box')}
-                  className={`p-1 rounded border text-center truncate ${
-                    bannerStyle === 'box'
-                      ? 'bg-[#F59E0B]/20 border-[#F59E0B] text-[#F59E0B]'
-                      : 'bg-[#0E121A] border-[#202B3D] text-[#94A3B8]'
-                  }`}
-                >
-                  ┌ Рамка ┐
-                </button>
-                <button
-                  onClick={() => setBannerStyle('double')}
-                  className={`p-1 rounded border text-center truncate ${
-                    bannerStyle === 'double'
-                      ? 'bg-[#F59E0B]/20 border-[#F59E0B] text-[#F59E0B]'
-                      : 'bg-[#0E121A] border-[#202B3D] text-[#94A3B8]'
-                  }`}
-                >
-                  ╔ Двойная ╗
-                </button>
-                <button
-                  onClick={() => setBannerStyle('swords')}
-                  className={`p-1 rounded border text-center truncate ${
-                    bannerStyle === 'swords'
-                      ? 'bg-[#F59E0B]/20 border-[#F59E0B] text-[#F59E0B]'
-                      : 'bg-[#0E121A] border-[#202B3D] text-[#94A3B8]'
-                  }`}
-                >
-                  ⚔ Мечи ⚔
-                </button>
-                <button
-                  onClick={() => setBannerStyle('brackets')}
-                  className={`p-1 rounded border text-center truncate ${
-                    bannerStyle === 'brackets'
-                      ? 'bg-[#F59E0B]/20 border-[#F59E0B] text-[#F59E0B]'
-                      : 'bg-[#0E121A] border-[#202B3D] text-[#94A3B8]'
-                  }`}
-                >
-                  [ Скобки ]
-                </button>
+                            <div className="grid grid-cols-2 gap-1 text-[10px]">
+                <button onClick={() => setBannerStyle('stars')} className={`p-1 rounded border text-center ${bannerStyle==='stars'?'bg-[#66C0F4]/20 border-[#66C0F4] text-[#66C0F4]':'bg-[#0E121A] border-[#202B3D] text-[#94A3B8]'}`}>★ Звёзды ★</button>
+                <button onClick={() => setBannerStyle('brackets')} className={`p-1 rounded border text-center ${bannerStyle==='brackets'?'bg-[#66C0F4]/20 border-[#66C0F4] text-[#66C0F4]':'bg-[#0E121A] border-[#202B3D] text-[#94A3B8]'}`}>[ Скобки ]</button>
               </div>
 
               <button
                 onClick={handleCreateCustomBanner}
-                className="w-full py-1.5 bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#FBBF24] hover:to-[#E5A93C] text-black font-bold text-xs rounded transition-all flex items-center justify-center gap-1.5 shadow"
+                className="w-full py-1.5 bg-gradient-to-r from-[#66C0F4] to-[#1A9FFF] hover:from-[#66C0F4] hover:to-[#66C0F4] text-black font-bold text-xs rounded transition-all flex items-center justify-center gap-1.5 shadow"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Добавить плашку на холст</span>
+                <span>Добавить заголовок на холст</span>
               </button>
             </div>
 
@@ -563,52 +508,33 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 ПАЛОЧКИ И РАЗДЕЛИТЕЛИ ДЛЯ ДОТЫ
               </span>
               <p className="text-[11px] text-[#94A3B8]">
-                Нажмите для создания линии/палочки на холсте (100% отображаются в Dota 2):
+                Добавляет строку из символа, который уже отображался в вашей сетке Dota.
               </p>
 
-              <div className="grid grid-cols-3 gap-1.5 pt-1">
-                <button
-                  onClick={() => handleAddStraightLine('double')}
-                  className="p-2 bg-[#0E121A] hover:bg-[#1A2333] border border-[#202B3D] hover:border-[#F59E0B] rounded text-center transition-colors group"
-                >
-                  <span className="block text-[11px] font-bold text-[#E2E8F0] group-hover:text-[#F59E0B]">Двойная ══</span>
-                  <span className="block font-mono text-[10px] text-[#F59E0B]/80 truncate">═════════</span>
-                </button>
-                <button
-                  onClick={() => handleAddStraightLine('single')}
-                  className="p-2 bg-[#0E121A] hover:bg-[#1A2333] border border-[#202B3D] hover:border-[#F59E0B] rounded text-center transition-colors group"
-                >
-                  <span className="block text-[11px] font-bold text-[#E2E8F0] group-hover:text-[#F59E0B]">Тонкая ──</span>
-                  <span className="block font-mono text-[10px] text-[#CBD5E1]/80 truncate">─────────</span>
-                </button>
-                <button
-                  onClick={() => handleAddStraightLine('heavy')}
-                  className="p-2 bg-[#0E121A] hover:bg-[#1A2333] border border-[#202B3D] hover:border-[#F59E0B] rounded text-center transition-colors group"
-                >
-                  <span className="block text-[11px] font-bold text-[#E2E8F0] group-hover:text-[#F59E0B]">Толстая ━━</span>
-                  <span className="block font-mono text-[10px] text-[#F59E0B]/80 truncate">━━━━━━━━━</span>
-                </button>
-              </div>
+                            <button onClick={() => handleAddStraightLine('single')} className="w-full p-2 bg-[#0E121A] hover:bg-[#1A2333] border border-[#202B3D] hover:border-[#66C0F4] rounded text-left transition-colors group">
+                <span className="block text-[11px] font-bold text-[#E2E8F0] group-hover:text-[#66C0F4]">Добавить подтверждённую полоску</span>
+                <span className="block font-mono text-[10px] text-[#66C0F4]/80 truncate">͟ ͟ ͟ ͟ ͟ ͟ ͟ ͟</span>
+              </button>
 
               <span className="text-[11px] font-bold text-[#CBD5E1] block pt-2">
-                Шаблоны рамок и колонок:
+                Проверенные текстовые шаблоны:
               </span>
               <div className="space-y-1.5">
-                {DOTA_ASCII_PRESETS.map((preset) => (
+                {visibleAsciiPresets.map((preset) => (
                   <button
                     key={preset.id}
                     onClick={() => handleAddAsciiPreset(preset)}
-                    className="w-full p-2 bg-[#0E121A] hover:bg-[#1A2333] border border-[#202B3D] hover:border-[#F59E0B] rounded-lg text-left transition-all flex items-center justify-between group"
+                    className="w-full p-2 bg-[#0E121A] hover:bg-[#1A2333] border border-[#202B3D] hover:border-[#66C0F4] rounded-lg text-left transition-all flex items-center justify-between group"
                   >
                     <div className="min-w-0 flex-1">
-                      <span className="text-xs font-bold text-[#E2E8F0] block group-hover:text-[#F59E0B] transition-colors truncate">
+                      <span className="text-xs font-bold text-[#E2E8F0] block group-hover:text-[#66C0F4] transition-colors truncate">
                         {preset.name}
                       </span>
-                      <span className="font-mono text-[11px] text-[#F59E0B]/90 block truncate mt-0.5">
+                      <span className="font-mono text-[11px] text-[#66C0F4]/90 block truncate mt-0.5">
                         {preset.preview.split('\n')[0]}
                       </span>
                     </div>
-                    <Plus className="w-4 h-4 text-[#94A3B8] group-hover:text-[#F59E0B] shrink-0 ml-2" />
+                    <Plus className="w-4 h-4 text-[#94A3B8] group-hover:text-[#66C0F4] shrink-0 ml-2" />
                   </button>
                 ))}
               </div>
@@ -616,8 +542,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
             {/* Symbols Palette with Tabs */}
             <div className="bg-[#121824] border border-[#202B3D] rounded-lg p-3 space-y-2.5">
-              <span className="text-xs font-bold text-[#F59E0B] block font-['Cinzel']">
-                ПАЛИТРА СИМВОЛОВ (ПАЛОЧКИ, ЗВЕЗДЫ, БЛОКИ)
+              <span className="text-xs font-bold text-[#66C0F4] block font-['Cinzel']">
+                ПРОВЕРЕННЫЕ СИМВОЛЫ ДЛЯ ЗАГОЛОВКОВ DOTA
               </span>
 
               {/* Category selector */}
@@ -626,19 +552,19 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   onClick={() => setSelectedSymbolCategory('all')}
                   className={`px-2 py-1 rounded whitespace-nowrap ${
                     selectedSymbolCategory === 'all'
-                      ? 'bg-[#F59E0B] text-black font-bold'
+                      ? 'bg-[#66C0F4] text-black font-bold'
                       : 'bg-[#0E121A] text-[#94A3B8] hover:text-white'
                   }`}
                 >
                   Все
                 </button>
-                {Object.entries(SYMBOL_CATEGORIES).map(([key, cat]) => (
+                {Object.entries(SYMBOL_CATEGORIES).filter(([, cat]) => cat.symbols.some((symbol) => DOTA_TESTED_SYMBOLS.has(symbol.char))).map(([key, cat]) => (
                   <button
                     key={key}
                     onClick={() => setSelectedSymbolCategory(key)}
                     className={`px-2 py-1 rounded whitespace-nowrap ${
                       selectedSymbolCategory === key
-                        ? 'bg-[#F59E0B] text-black font-bold'
+                        ? 'bg-[#66C0F4] text-black font-bold'
                         : 'bg-[#0E121A] text-[#94A3B8] hover:text-white'
                     }`}
                   >
@@ -652,12 +578,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 {Object.entries(SYMBOL_CATEGORIES)
                   .filter(([key]) => selectedSymbolCategory === 'all' || selectedSymbolCategory === key)
                   .flatMap(([, cat]) => cat.symbols)
+                  .filter((sym) => DOTA_TESTED_SYMBOLS.has(sym.char))
                   .map((sym, idx) => (
                     <button
                       key={sym.char + idx}
                       onClick={() => handleAddSymbol(sym.char, sym.name)}
                       title={`${sym.name} (${sym.char})`}
-                      className="h-10 flex items-center justify-center bg-[#121824] hover:bg-[#1E293B] border border-[#202B3D] hover:border-[#F59E0B] rounded text-lg text-white hover:text-[#F59E0B] transition-all group active:scale-95"
+                      className="h-10 flex items-center justify-center bg-[#121824] hover:bg-[#1E293B] border border-[#202B3D] hover:border-[#66C0F4] rounded text-lg text-white hover:text-[#66C0F4] transition-all group active:scale-95"
                     >
                       <span className="group-hover:scale-125 transition-transform">{sym.char}</span>
                     </button>
@@ -673,7 +600,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             {/* 35x7 Main Grid Generator */}
             <div className="bg-[#121824] border border-[#202B3D] rounded-lg p-3 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#F59E0B] flex items-center gap-1.5 font-['Cinzel']">
+                <span className="text-xs font-bold text-[#66C0F4] flex items-center gap-1.5 font-['Cinzel']">
                   <Grid className="w-3.5 h-3.5" />
                   HERO GRID GENERATOR
                 </span>
@@ -691,7 +618,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     max={50}
                     value={gridCols}
                     onChange={(e) => setGridCols(parseInt(e.target.value) || 35)}
-                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                   />
                 </div>
                 <div>
@@ -702,7 +629,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     max={25}
                     value={gridRows}
                     onChange={(e) => setGridRows(parseInt(e.target.value) || 7)}
-                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                   />
                 </div>
               </div>
@@ -716,7 +643,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     max={120}
                     value={slotWidth}
                     onChange={(e) => setSlotWidth(parseInt(e.target.value) || 48)}
-                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                   />
                 </div>
                 <div>
@@ -727,7 +654,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     max={80}
                     value={slotHeight}
                     onChange={(e) => setSlotHeight(parseInt(e.target.value) || 30)}
-                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                   />
                 </div>
               </div>
@@ -741,7 +668,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     max={30}
                     value={gapX}
                     onChange={(e) => setGapX(parseInt(e.target.value) || 4)}
-                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                   />
                 </div>
                 <div>
@@ -752,14 +679,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     max={30}
                     value={gapY}
                     onChange={(e) => setGapY(parseInt(e.target.value) || 4)}
-                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                   />
                 </div>
               </div>
 
               <button
                 onClick={handleRegenerateMainGrid}
-                className="w-full py-2 bg-gradient-to-r from-[#F59E0B] to-[#D97706] hover:from-[#FBBF24] hover:to-[#E5A93C] text-black font-bold text-xs rounded shadow-md shadow-amber-950/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-2 bg-gradient-to-r from-[#66C0F4] to-[#1A9FFF] hover:from-[#66C0F4] hover:to-[#66C0F4] text-black font-bold text-xs rounded shadow-md shadow-amber-950/40 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>Применить сетку {gridCols}×{gridRows} ({gridCols * gridRows} слотов)</span>
               </button>
@@ -826,9 +753,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <>
             {/* Slot Inspector if a slot is selected */}
             {selectedSlot && (
-              <div className="bg-[#121824] border border-[#F59E0B]/60 rounded-lg p-3 space-y-2.5 shadow-lg shadow-amber-950/20">
+              <div className="bg-[#121824] border border-[#66C0F4]/60 rounded-lg p-3 space-y-2.5 shadow-lg shadow-amber-950/20">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#F59E0B]">
+                  <span className="text-xs font-bold text-[#66C0F4]">
                     SELECTED SLOT ({selectedSlot.isBan ? 'BAN' : 'HERO'})
                   </span>
                   <span className="text-[10px] font-mono text-[#94A3B8]">
@@ -897,9 +824,9 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 </div>
 
                 {/* Dota 2 Native Export Integration Box */}
-                <div className="bg-[#0B0E15] border border-[#F59E0B]/40 rounded p-2.5 space-y-2">
+                <div className="bg-[#0B0E15] border border-[#66C0F4]/40 rounded p-2.5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#F59E0B] flex items-center gap-1">
+                    <span className="text-[11px] font-bold text-[#66C0F4] flex items-center gap-1">
                       <FileCode className="w-3.5 h-3.5" />
                       Dota 2 Export
                     </span>
@@ -909,7 +836,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         type="checkbox"
                         checked={selectedItem.exportToDota !== false}
                         onChange={(e) => handleUpdateSelectedItem({ exportToDota: e.target.checked })}
-                        className="accent-[#F59E0B] rounded"
+                        className="accent-[#66C0F4] rounded"
                       />
                     </label>
                   </div>
@@ -922,7 +849,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                       value={categoryNameValue}
                       onChange={(e) => handleUpdateSelectedItem({ dotaCategoryName: e.target.value })}
                       placeholder="Category name in Dota 2"
-                      className="w-full bg-[#121824] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                      className="w-full bg-[#121824] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                     />
                   </div>
 
@@ -949,12 +876,12 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     </div>
                     {favoriteDotaSymbolEntries.length > 0 && (
                       <div>
-                        <span className="text-[9px] uppercase tracking-wide text-[#F59E0B]">Favorites</span>
+                        <span className="text-[9px] uppercase tracking-wide text-[#66C0F4]">Favorites</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {favoriteDotaSymbolEntries.map((entry) => (
                             <div key={"favorite-" + entry.symbol} className="flex items-stretch">
-                              <button type="button" onClick={() => handleInsertDotaSymbol(entry.symbol)} title={entry.name} className="w-7 h-7 bg-[#121824] hover:bg-[#1E293B] border border-[#F59E0B]/40 rounded-l text-base text-white hover:text-[#F59E0B]">{entry.symbol}</button>
-                              <button type="button" onClick={() => toggleDotaFavorite(entry.symbol)} title="Remove from favorites" className="px-1 bg-[#121824] border-y border-r border-[#F59E0B]/40 rounded-r text-[10px] text-[#F59E0B]">★</button>
+                              <button type="button" onClick={() => handleInsertDotaSymbol(entry.symbol)} title={entry.name} className="w-7 h-7 bg-[#121824] hover:bg-[#1E293B] border border-[#66C0F4]/40 rounded-l text-base text-white hover:text-[#66C0F4]">{entry.symbol}</button>
+                              <button type="button" onClick={() => toggleDotaFavorite(entry.symbol)} title="Remove from favorites" className="px-1 bg-[#121824] border-y border-r border-[#66C0F4]/40 rounded-r text-[10px] text-[#66C0F4]">★</button>
                             </div>
                           ))}
                         </div>
@@ -974,7 +901,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                       {visibleDotaSymbols.map((entry) => (
                         <div key={entry.category + "-" + entry.symbol} className="flex items-stretch min-w-0">
                           <button type="button" onClick={() => handleInsertDotaSymbol(entry.symbol)} title={entry.name + " — " + entry.compatibility} className="flex-1 min-w-0 h-8 bg-[#0E121A] hover:bg-[#1E293B] border border-[#202B3D] rounded-l text-base text-white">{entry.symbol}</button>
-                          <button type="button" onClick={() => toggleDotaFavorite(entry.symbol)} title={favoriteDotaSymbols.includes(entry.symbol) ? "Remove from favorites" : "Add to favorites"} className="px-0.5 bg-[#0E121A] border-y border-r border-[#202B3D] rounded-r text-[9px] text-[#64748B] hover:text-[#F59E0B]">{favoriteDotaSymbols.includes(entry.symbol) ? '★' : '☆'}</button>
+                          <button type="button" onClick={() => toggleDotaFavorite(entry.symbol)} title={favoriteDotaSymbols.includes(entry.symbol) ? "Remove from favorites" : "Add to favorites"} className="px-0.5 bg-[#0E121A] border-y border-r border-[#202B3D] rounded-r text-[9px] text-[#64748B] hover:text-[#66C0F4]">{favoriteDotaSymbols.includes(entry.symbol) ? '★' : '☆'}</button>
                         </div>
                       ))}
                     </div>
@@ -1114,7 +1041,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         <label className="text-[10px] text-[#94A3B8] block mb-1">Glow Color</label>
                         <input
                           type="color"
-                          value={selectedItem.textGlow || '#F59E0B'}
+                          value={selectedItem.textGlow || '#66C0F4'}
                           onChange={(e) => handleUpdateSelectedItem({ textGlow: e.target.value })}
                           className="w-full h-7 bg-[#0E121A] border border-[#202B3D] rounded cursor-pointer"
                         />
@@ -1131,7 +1058,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         <label className="text-[10px] text-[#94A3B8] block mb-1">Fill Color</label>
                         <input
                           type="color"
-                          value={selectedItem.fill || '#F59E0B'}
+                          value={selectedItem.fill || '#66C0F4'}
                           onChange={(e) => handleUpdateSelectedItem({ fill: e.target.value })}
                           className="w-full h-7 bg-[#0E121A] border border-[#202B3D] rounded cursor-pointer"
                         />
@@ -1154,7 +1081,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         max={16}
                         value={selectedItem.strokeWidth || 1}
                         onChange={(e) => handleUpdateSelectedItem({ strokeWidth: parseInt(e.target.value) || 0 })}
-                        className="w-full accent-[#F59E0B]"
+                        className="w-full accent-[#66C0F4]"
                       />
                     </div>
                   </>
@@ -1370,7 +1297,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                       }));
                     }
                   }}
-                  className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1.5 rounded outline-none"
+                  className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1.5 rounded outline-none"
                 >
                   <option value="2560x1440">2K Quad HD (2560 × 1440) — Стандарт / Рекомендуется</option>
                   <option value="1920x1080">Full HD (1920 × 1080)</option>
@@ -1391,7 +1318,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         canvasWidth: parseInt(e.target.value) || 2560
                       }))
                     }
-                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                   />
                 </div>
                 <div>
@@ -1405,7 +1332,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         canvasHeight: parseInt(e.target.value) || 1440
                       }))
                     }
-                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                    className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                   />
                 </div>
               </div>
@@ -1421,7 +1348,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                       exportMode: e.target.value as 'column_preserve' | 'single_category'
                     }))
                   }
-                  className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1.5 rounded outline-none"
+                  className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1.5 rounded outline-none"
                 >
                   <option value="column_preserve">Сохранять точные колонки (Без кривизны и сжатия)</option>
                   <option value="single_category">Единая категория Dota 2</option>
@@ -1462,7 +1389,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                           background: { ...prev.background, opacity: parseFloat(e.target.value) }
                         }))
                       }
-                      className="w-full accent-[#F59E0B]"
+                      className="w-full accent-[#66C0F4]"
                     />
                   </div>
 
@@ -1476,7 +1403,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                           background: { ...prev.background, scaleMode: e.target.value as any }
                         }))
                       }
-                      className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#F59E0B] text-xs text-white px-2 py-1 rounded outline-none"
+                      className="w-full bg-[#0E121A] border border-[#202B3D] focus:border-[#66C0F4] text-xs text-white px-2 py-1 rounded outline-none"
                     >
                       <option value="fit">Fit to Canvas (Aspect Preserved)</option>
                       <option value="fill">Fill Canvas (Cover)</option>

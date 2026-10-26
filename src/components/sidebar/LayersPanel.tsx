@@ -138,7 +138,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
               {grid.isBanGrid ? (
                 <ShieldAlert className="w-3.5 h-3.5 text-red-400 shrink-0" />
               ) : (
-                <Grid className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
+                <Grid className="w-3.5 h-3.5 text-[#66C0F4] shrink-0" />
               )}
               <span className="truncate font-medium">{grid.name}</span>
             </div>
@@ -162,7 +162,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                     grids: prev.grids.map((g) => (g.id === grid.id ? { ...g, locked: !g.locked } : g))
                   }))
                 }
-                className={`p-1 rounded ${grid.locked ? 'text-[#F59E0B]' : 'text-[#94A3B8] hover:text-white'}`}
+                className={`p-1 rounded ${grid.locked ? 'text-[#66C0F4]' : 'text-[#94A3B8] hover:text-white'}`}
               >
                 {grid.locked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
               </button>
@@ -179,7 +179,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
               onClick={(e) => onSelectItemId(item.id, e.shiftKey || e.ctrlKey)}
               className={`flex items-center justify-between px-2.5 py-1.5 rounded border text-xs cursor-pointer transition-colors ${
                 isSelected
-                  ? 'bg-[#1A2333] border-[#F59E0B] text-white shadow-sm'
+                  ? 'bg-[#1A2333] border-[#66C0F4] text-white shadow-sm'
                   : 'bg-[#121824] border-[#202B3D] text-[#CBD5E1] hover:bg-[#1A2333]'
               }`}
             >
@@ -213,7 +213,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                 </button>
                 <button
                   onClick={(e) => handleToggleLock(item.id, e)}
-                  className={`p-1 rounded ${item.locked ? 'text-[#F59E0B]' : 'text-[#94A3B8] hover:text-white'}`}
+                  className={`p-1 rounded ${item.locked ? 'text-[#66C0F4]' : 'text-[#94A3B8] hover:text-white'}`}
                 >
                   {item.locked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
                 </button>
@@ -262,7 +262,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
                     background: { ...prev.background, locked: !prev.background.locked }
                   }))
                 }
-                className={`p-1 rounded ${project.background.locked ? 'text-[#F59E0B]' : 'text-[#94A3B8]'}`}
+                className={`p-1 rounded ${project.background.locked ? 'text-[#66C0F4]' : 'text-[#94A3B8]'}`}
               >
                 {project.background.locked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
               </button>

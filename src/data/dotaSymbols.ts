@@ -149,6 +149,21 @@ export const DOTA_SYMBOLS: DotaSymbolEntry[] = [
 ];
 
 const DOTA_SYMBOLS_BY_VALUE = new Map(DOTA_SYMBOLS.map((entry) => [entry.symbol, entry]));
+const DOTA_SCREENSHOT_VERIFIED = new Set([
+  '–','—','―','¯','‾','¦',
+  '★','☆','✪','✫','✯','✰','✦','✧',
+  '■','□','▪','▫','▣','▤','▥','▦','▧','▨','▩',
+  '●','○','◉','◎','◌','◍','◐','◑','◒','◓','◔','◕',
+  '▲','△','▼','▽','◀','◁','▶','▷','◢','◣','◤','◥',
+  '◆','◇','◈','◊','♦','♢','♡','♥',
+  '←','↑','→','↓','↔','↕','↖','↗','↘','↙','⇒','⇔',
+  '±','×','÷','≠','≈','≤','≥','∞','√','∑','∏','∫','∂','∇','∴','∵','∝','∠','⊕','⊙',
+  '•','‧','·','…','‥','§','¶','†','‡','‰','※',
+  '♠','♣','♢','♥','♦','♤','♧','☎','♫','♪','♬','☺','☻','☹','¬',
+  '͟','̲','̅','̶','̸','͞','͠','⁰','¹','²','³','⁴','⁵','⁶','⁷','⁸','⁹','⁺','⁻',
+  'α','β','γ','δ','ε','ζ','η','θ','λ','μ','π','σ','φ','ω','Α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Λ','Μ','Π','Σ','Φ','Ω',
+  'あ','ア','日','本','語','文','字','漢'
+]);
 
 export interface DotaTextAnalysis {
   verifiedSymbols: string[];
@@ -164,7 +179,7 @@ export function analyzeDotaText(text: string): DotaTextAnalysis {
 
   for (const symbol of Array.from(text)) {
     const entry = DOTA_SYMBOLS_BY_VALUE.get(symbol);
-    const compatibility = entry?.compatibility || (symbol.codePointAt(0)! <= 0x7f ? 'verified' : 'unknown');
+    const compatibility = DOTA_SCREENSHOT_VERIFIED.has(symbol) ? 'verified' : entry?.compatibility || (symbol.codePointAt(0)! <= 0x7f ? 'verified' : 'unknown');
     if (compatibility === 'verified') verifiedSymbols.push(symbol);
     if (compatibility === 'unknown') unknownSymbols.push(symbol);
     if (compatibility === 'unsupported') unsupportedSymbols.push(symbol);

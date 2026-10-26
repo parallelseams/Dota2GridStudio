@@ -14,7 +14,7 @@
     border: 1px solid #0B0E14;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #E5A93C;
+    background: #66C0F4;
   }
 
   .dota-glass {
@@ -30,7 +30,7 @@
   }
 
   .dota-card:hover {
-    border-color: #E5A93C;
+    border-color: #66C0F4;
     box-shadow: 0 0 12px rgba(229, 169, 60, 0.25);
   }
 }

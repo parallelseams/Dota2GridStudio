@@ -8,7 +8,7 @@ import {
   DotaHero
 } from '../../types/dota';
 import { CanvasRenderer } from '../../utils/canvasRenderer';
-import { findSnapSlot } from '../../utils/gridUtils';
+import { assignHeroToSlot, findSnapSlot } from '../../utils/gridUtils';
 import { HEROES_BY_ID } from '../../data/dotaHeroes';
 
 interface GridCanvasProps {
@@ -415,7 +415,8 @@ export const GridCanvas: React.FC<GridCanvasProps> = ({
   };
 
   // Pointer Down Handler
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
     if (e.button === 2) return; // Right click handled separately
 
     const { x: cX, y: cY } = screenToCanvas(e.clientX, e.clientY);
@@ -647,7 +648,7 @@ export const GridCanvas: React.FC<GridCanvasProps> = ({
   };
 
   // Pointer Move Handler
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const { x: cX, y: cY } = screenToCanvas(e.clientX, e.clientY);
     lastMouseCanvasPos.current = { x: cX, y: cY };
 
@@ -749,7 +750,7 @@ export const GridCanvas: React.FC<GridCanvasProps> = ({
   };
 
   // Pointer Up Handler
-  const handleMouseUp = (e: React.MouseEvent) => {
+  const handleMouseUp = (e: React.PointerEvent<HTMLDivElement>) => {
     const { x: cX, y: cY } = screenToCanvas(e.clientX, e.clientY);
     const state = interactionState.current;
 
@@ -917,18 +918,7 @@ export const GridCanvas: React.FC<GridCanvasProps> = ({
 
     if (snap) {
       // Assign to snapped slot
-      onUpdateProject((prev) => ({
-        ...prev,
-        grids: prev.grids.map((grid) => {
-          if (grid.id === snap.gridId) {
-            return {
-              ...grid,
-              slots: grid.slots.map((s) => (s.id === snap.slot.id ? { ...s, heroId } : s))
-            };
-          }
-          return grid;
-        })
-      }));
+      onUpdateProject((prev) => assignHeroToSlot(prev, snap.gridId, snap.slot.id, heroId));
       onSelectSlot({ gridId: snap.gridId, slotId: snap.slot.id });
     } else {
       // Freeform placement: create a freeform movable hero card at drop location!
@@ -969,9 +959,9 @@ export const GridCanvas: React.FC<GridCanvasProps> = ({
     <div
       ref={containerRef}
       onWheel={handleWheel}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
+      onPointerDown={handleMouseDown}
+      onPointerMove={handleMouseMove}
+      onPointerUp={handleMouseUp}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       className={`relative w-full h-full overflow-hidden bg-[#0B0E14] select-none ${
